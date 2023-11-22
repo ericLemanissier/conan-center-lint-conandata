@@ -1,7 +1,6 @@
 import logging
 import os
 import sys
-from typing import Optional
 
 import requests
 import yaml
@@ -21,10 +20,9 @@ def iterate_urls(node):
                     yield version, url_, sha
 
 
-def test_url(url: str, timeout=10) -> Optional[requests.Response]:
+def test_url(url: str, timeout: int = 10) -> requests.Response | None:
     try:
-        response = session.head(url, timeout=timeout)
-        return response
+        return session.head(url, timeout=timeout)
     except requests.exceptions.Timeout:
         logging.warning("timeout when contacting %s", url)
     except requests.exceptions.ConnectionError:
@@ -32,7 +30,7 @@ def test_url(url: str, timeout=10) -> Optional[requests.Response]:
     return None
 
 
-def check_alternative_archives(url, orig_size):
+def check_alternative_archives(url:str, orig_size:int | None):
     # The suffixes are ranked by their typical compression efficiency
     archive_suffixes = [".tar.xz", ".tar.bz2", ".tar.gz", ".tgz", ".zip"]
     for suffix in archive_suffixes:
@@ -49,9 +47,8 @@ def check_alternative_archives(url, orig_size):
             if orig_size is None:
                 # Server does not report sizes and only worse formats remain
                 return
-            else:
-                # Skip the request for the original URL
-                continue
+            # Skip the request for the original URL
+            continue
         r = test_url(new_url, timeout=2)
         if r and r.ok:
             if "Content-Length" not in r.headers:
@@ -111,9 +108,7 @@ def main(path: str) -> int:
         response = test_url(url)
         if response and response.ok:
             orig_size = response.headers.get("Content-Length")
-            if orig_size is not None:
-                orig_size = int(orig_size)
-            check_alternative_archives(url, orig_size)
+            check_alternative_archives(url, int(orig_size) if orig_size is not None else None)
         elif response:
             print(f"url {url} is not available ({response.status_code})")
         else:

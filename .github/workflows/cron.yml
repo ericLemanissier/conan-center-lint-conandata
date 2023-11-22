@@ -46,20 +46,7 @@ jobs:
           echo "" | tee -a $outfile $GITHUB_STEP_SUMMARY
           for d in */*/
           do
-            conandata=${d}conandata.yml            
-            if [[ ! -f "$conandata" ]]
-            then
-              continue
-            fi
-            res=$(python3 ../../lint_conandata.py ${conandata})
-            if [[ -z "$res" ]]
-            then
-              continue
-            fi
-            echo "## [${d}](https://github.com/conan-io/conan-center-index/tree/master/recipes/${conandata})" | tee -a $outfile $GITHUB_STEP_SUMMARY
-            echo "${res}" | tee -a $outfile $GITHUB_STEP_SUMMARY
-            echo "" | tee -a $outfile $GITHUB_STEP_SUMMARY
-
+            ../../run_lint.sh ${d} | tee -a $outfile $GITHUB_STEP_SUMMARY
           done
 
         working-directory: conan-center-index/recipes
