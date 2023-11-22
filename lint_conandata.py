@@ -94,15 +94,15 @@ def main(path: str) -> int:
         elif not url.startswith("https://"):
             logging.warning("unknown url scheme %s", url)
 
-        version = version.lower()
-        url = url.lower()
-        if not version.startswith("cci."):
+        version_lower = version.lower()
+        url_lower = url.lower()
+        if not version_lower.startswith("cci."):
             if (
-                (version in url)
-                or (version.replace(".", "") in url)
-                or (version.replace(".", "_") in url)
-                or (version.replace("-", "") in url)
-                or (version.endswith(".0") and version[:-2] in url)
+                (version_lower in url_lower)
+                or (version_lower.replace(".", "") in url_lower)
+                or (version_lower.replace(".", "_") in url_lower)
+                or (version_lower.replace("-", "") in url_lower)
+                or (version_lower.endswith(".0") and version_lower[:-2] in url_lower)
             ):
                 at_least_one_version_in_url = True
             else:
