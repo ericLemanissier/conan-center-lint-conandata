@@ -30,7 +30,7 @@ def test_url(url: str, timeout: int = 10) -> requests.Response | None:
     return None
 
 
-def check_alternative_archives(url:str, orig_size:int | None):
+def check_alternative_archives(url:str, orig_size: int | None):
     # The suffixes are ranked by their typical compression efficiency
     archive_suffixes = [".tar.xz", ".tar.bz2", ".tar.gz", ".tgz", ".zip"]
     for suffix in archive_suffixes:
@@ -49,12 +49,12 @@ def check_alternative_archives(url:str, orig_size:int | None):
                 return
             # Skip the request for the original URL
             continue
-        r = test_url(new_url, timeout=2)
-        if r and r.ok:
-            if "Content-Length" not in r.headers:
+        response = test_url(new_url, timeout=2)
+        if response and response.ok:
+            if "Content-Length" not in response.headers:
                 print(f"a potentially smaller archive exists at {new_url}")
                 return
-            size = int(r.headers["Content-Length"])
+            size = int(response.headers["Content-Length"])
             results.append((size, new_url))
     results = sorted(results)
     if results:
