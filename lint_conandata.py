@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 import sys
 
 import requests
@@ -38,6 +39,10 @@ def _get_content_length(response: requests.Response) -> int | None:
 
 
 def check_alternative_archives(url:str, orig_size: int | None):
+    if "github.com" in url and "/releases/download/" not in url:
+        # Ignore archives generated automatically from tags and hashes, as well as individual files.
+        return
+
     # The suffixes are ranked by their typical compression efficiency
     archive_suffixes = [".tar.xz", ".tar.bz2", ".tar.gz", ".tgz", ".zip"]
     for suffix in archive_suffixes:
@@ -47,7 +52,13 @@ def check_alternative_archives(url:str, orig_size: int | None):
     else:
         # Not an archive
         return
+
     results = []
+    if "/-/archive/" in url:
+        # This is most likely a GitLab archive, can limit the check to just .tar.bz2
+        archive_suffixes = [".tar.bz2"]
+        results.append((orig_size, url))
+
     for suffix in archive_suffixes:
         new_url = without_suffix + suffix
         if new_url == url:
@@ -60,6 +71,7 @@ def check_alternative_archives(url:str, orig_size: int | None):
         results.append((size, new_url))
         if size is None:
             break
+
     if any(size is None for size, _ in results):
         best_size, best_url = results[0]
         if best_url != url:
