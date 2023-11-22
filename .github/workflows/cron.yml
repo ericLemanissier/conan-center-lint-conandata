@@ -44,10 +44,7 @@ jobs:
           outfile=../../pages/index.md
           echo "The following recipes conandata.yml have smells." | tee -a $outfile $GITHUB_STEP_SUMMARY
           echo "" | tee -a $outfile $GITHUB_STEP_SUMMARY
-          for d in */*/
-          do
-            ../../run_lint.sh ${d} | tee -a $outfile $GITHUB_STEP_SUMMARY
-          done
+          parallel ../../run_lint.sh ::: */*/ | tee -a $outfile $GITHUB_STEP_SUMMARY
 
         working-directory: conan-center-index/recipes
 
