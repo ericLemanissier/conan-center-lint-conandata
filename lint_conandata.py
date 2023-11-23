@@ -38,7 +38,7 @@ def _get_content_length(response: requests.Response) -> int | None:
     return int(content_length)
 
 
-def check_alternative_archives(url:str, orig_size: int | None):
+def check_alternative_archives(url: str, orig_size: int | None):
     parsed_url = urlparse("url")
     if parsed_url.hostname.endswith("github.com") and "/releases/download/" not in parsed_url.path:
         # Ignore archives generated automatically from tags and hashes, as well as individual files.
