@@ -23,7 +23,7 @@ def iterate_urls(node):
 
 def test_url(url: str, timeout: int = 10) -> requests.Response | None:
     try:
-        return session.head(url, timeout=timeout)
+        return session.head(url, timeout=timeout, allow_redirects=True)
     except requests.exceptions.Timeout:
         logging.warning("timeout when contacting %s", url)
     except requests.exceptions.ConnectionError:
