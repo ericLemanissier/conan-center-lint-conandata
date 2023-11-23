@@ -39,7 +39,8 @@ def _get_content_length(response: requests.Response) -> int | None:
 
 
 def check_alternative_archives(url: str, orig_size: int | None):
-    parsed_url = urlparse("url")
+    parsed_url = urlparse(url)
+    assert parsed_url.hostname is not None, f"Url {url=} does not have a hostname, {parsed_url=}"
     if parsed_url.hostname.endswith("github.com") and "/releases/download/" not in parsed_url.path:
         # Ignore archives generated automatically from tags and hashes, as well as individual files.
         return
@@ -54,7 +55,7 @@ def check_alternative_archives(url: str, orig_size: int | None):
         # Not an archive
         return
 
-    results = []
+    results: list[tuple[int | None, str]] = []
     if "/-/archive/" in parsed_url.path:
         # This is most likely a GitLab archive, can limit the check to just .tar.bz2
         archive_suffixes = [".tar.bz2"]
@@ -80,6 +81,7 @@ def check_alternative_archives(url: str, orig_size: int | None):
     else:
         best_size, best_url = min(results)
         if best_url != url:
+            assert orig_size is not None, f"orig_size is None for {url=}, {results=}, {archive_suffixes=}"
             improvement = (orig_size - best_size) / orig_size
             print(f"a {improvement:.1%} smaller archive exists at {best_url}")
 
