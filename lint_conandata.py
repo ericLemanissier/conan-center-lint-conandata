@@ -66,7 +66,7 @@ def check_alternative_archives(url: str, orig_size: int | None):
         if new_url == url:
             size = orig_size
         else:
-            response = test_url(new_url, timeout=2)
+            response = test_url(new_url, timeout=6)
             if not response or not response.ok:
                 continue
             size = _get_content_length(response)
@@ -83,7 +83,8 @@ def check_alternative_archives(url: str, orig_size: int | None):
         if best_url != url:
             assert orig_size is not None and best_size is not None, f"orig_size or best_size is None for {url=}, {results=}, {archive_suffixes=}"
             improvement = (orig_size - best_size) / orig_size
-            print(f"a {improvement:.1%} smaller archive exists at {best_url}\n")
+            if improvement >= 0.0005 and orig_size - best_size > 1024:
+                print(f"a {improvement:.1%} smaller archive exists at {best_url}\n")
 
 
 def main(path: str) -> int:
