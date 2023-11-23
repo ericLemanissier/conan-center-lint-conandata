@@ -1,7 +1,7 @@
 import logging
 import os
-import re
 import sys
+from urllib.parse import urlparse
 
 import requests
 import yaml
@@ -39,7 +39,8 @@ def _get_content_length(response: requests.Response) -> int | None:
 
 
 def check_alternative_archives(url:str, orig_size: int | None):
-    if "github.com" in url and "/releases/download/" not in url:
+    parsed_url = urlparse("url")
+    if parsed_url.hostname.endswith("github.com") and "/releases/download/" not in parsed_url.path:
         # Ignore archives generated automatically from tags and hashes, as well as individual files.
         return
 
@@ -54,7 +55,7 @@ def check_alternative_archives(url:str, orig_size: int | None):
         return
 
     results = []
-    if "/-/archive/" in url:
+    if "/-/archive/" in parsed_url.path:
         # This is most likely a GitLab archive, can limit the check to just .tar.bz2
         archive_suffixes = [".tar.bz2"]
         results.append((orig_size, url))
