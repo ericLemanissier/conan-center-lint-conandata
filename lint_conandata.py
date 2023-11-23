@@ -77,13 +77,13 @@ def check_alternative_archives(url: str, orig_size: int | None):
     if any(size is None for size, _ in results):
         best_size, best_url = results[0]
         if best_url != url:
-            print(f"a potentially smaller archive exists at {best_url}")
+            print(f"a potentially smaller archive exists at {best_url}\n")
     else:
         best_size, best_url = min(results)
         if best_url != url:
-            assert orig_size is not None, f"orig_size is None for {url=}, {results=}, {archive_suffixes=}"
+            assert orig_size is not None and best_size is not None, f"orig_size or best_size is None for {url=}, {results=}, {archive_suffixes=}"
             improvement = (orig_size - best_size) / orig_size
-            print(f"a {improvement:.1%} smaller archive exists at {best_url}")
+            print(f"a {improvement:.1%} smaller archive exists at {best_url}\n")
 
 
 def main(path: str) -> int:
