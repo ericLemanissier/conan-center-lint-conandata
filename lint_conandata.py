@@ -26,8 +26,8 @@ def test_url(url: str, timeout: int = 10) -> requests.Response | None:
         return session.head(url, timeout=timeout, allow_redirects=True)
     except requests.exceptions.Timeout:
         logging.warning("timeout when contacting %s", url)
-    except requests.exceptions.ConnectionError:
-        logging.warning("connection error when contacting %s", url)
+    except requests.exceptions.ConnectionError as ex:
+        logging.warning("connection error when contacting %s: %s", url, ex)
     return None
 
 
@@ -66,7 +66,7 @@ def check_alternative_archives(url: str, orig_size: int | None):
         if new_url == url:
             size = orig_size
         else:
-            response = test_url(new_url, timeout=6)
+            response = test_url(new_url, timeout=10)
             if not response or not response.ok:
                 continue
             size = _get_content_length(response)
@@ -84,7 +84,7 @@ def check_alternative_archives(url: str, orig_size: int | None):
             assert orig_size is not None and best_size is not None, f"orig_size or best_size is None for {url=}, {results=}, {archive_suffixes=}"
             improvement = (orig_size - best_size) / orig_size
             if improvement >= 0.0005 and orig_size - best_size > 1024:
-                print(f"a {improvement:.1%} smaller archive exists at {best_url}\n")
+                print(f"a {improvement:.1%} ({(orig_size - best_size)/1024:.0f}kB) smaller archive exists at {best_url}\n")
 
 
 def main(path: str) -> int:
@@ -129,13 +129,13 @@ def main(path: str) -> int:
                 versions_not_in_url.append((version, url))
 
         response = test_url(url)
-        if response and response.ok:
+        if response is None:
+            print(f"url {url} is not available\n")
+        elif not response.ok:
+            print(f"url {url} is not available ({response.status_code})\n")
+        else:
             orig_size = _get_content_length(response)
             check_alternative_archives(url, orig_size)
-        elif response:
-            print(f"url {url} is not available ({response.status_code})")
-        else:
-            print(f"url {url} is not available")
 
     if at_least_one_version_in_url:
         for vers in versions_not_in_url:
