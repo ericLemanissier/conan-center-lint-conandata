@@ -1,6 +1,7 @@
 import logging
 import os
 import sys
+from urllib.parse import urlparse
 
 import requests
 import yaml
@@ -30,7 +31,20 @@ def test_url(url: str, timeout: int = 10) -> requests.Response | None:
     return None
 
 
-def check_alternative_archives(url:str, orig_size: int | None):
+def _get_content_length(response: requests.Response) -> int | None:
+    content_length = response.headers.get("Content-Length")
+    if content_length is None or not content_length.isdigit() or content_length == "0":
+        return None
+    return int(content_length)
+
+
+def check_alternative_archives(url: str, orig_size: int | None):
+    parsed_url = urlparse(url)
+    assert parsed_url.hostname is not None, f"Url {url=} does not have a hostname, {parsed_url=}"
+    if parsed_url.hostname.endswith("github.com") and "/releases/download/" not in parsed_url.path:
+        # Ignore archives generated automatically from tags and hashes, as well as individual files.
+        return
+
     # The suffixes are ranked by their typical compression efficiency
     archive_suffixes = [".tar.xz", ".tar.bz2", ".tar.gz", ".tgz", ".zip"]
     for suffix in archive_suffixes:
@@ -40,26 +54,34 @@ def check_alternative_archives(url:str, orig_size: int | None):
     else:
         # Not an archive
         return
-    results = []
+
+    results: list[tuple[int | None, str]] = []
+    if "/-/archive/" in parsed_url.path:
+        # This is most likely a GitLab archive, can limit the check to just .tar.bz2
+        archive_suffixes = [".tar.bz2"]
+        results.append((orig_size, url))
+
     for suffix in archive_suffixes:
         new_url = without_suffix + suffix
         if new_url == url:
-            if orig_size is None:
-                # Server does not report sizes and only worse formats remain
-                return
-            # Skip the request for the original URL
-            continue
-        response = test_url(new_url, timeout=2)
-        if response and response.ok:
-            if "Content-Length" not in response.headers:
-                print(f"a potentially smaller archive exists at {new_url}")
-                return
-            size = int(response.headers["Content-Length"])
-            results.append((size, new_url))
-    results = sorted(results)
-    if results:
+            size = orig_size
+        else:
+            response = test_url(new_url, timeout=2)
+            if not response or not response.ok:
+                continue
+            size = _get_content_length(response)
+        results.append((size, new_url))
+        if size is None:
+            break
+
+    if any(size is None for size, _ in results):
         best_size, best_url = results[0]
-        if orig_size and best_size and best_size < orig_size:
+        if best_url != url:
+            print(f"a potentially smaller archive exists at {best_url}")
+    else:
+        best_size, best_url = min(results)
+        if best_url != url:
+            assert orig_size is not None, f"orig_size is None for {url=}, {results=}, {archive_suffixes=}"
             improvement = (orig_size - best_size) / orig_size
             print(f"a {improvement:.1%} smaller archive exists at {best_url}")
 
@@ -107,8 +129,8 @@ def main(path: str) -> int:
 
         response = test_url(url)
         if response and response.ok:
-            orig_size = response.headers.get("Content-Length")
-            check_alternative_archives(url, int(orig_size) if orig_size is not None else None)
+            orig_size = _get_content_length(response)
+            check_alternative_archives(url, orig_size)
         elif response:
             print(f"url {url} is not available ({response.status_code})")
         else:
