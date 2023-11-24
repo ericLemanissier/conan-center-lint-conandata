@@ -3,10 +3,10 @@ import os
 import sys
 from urllib.parse import urlparse
 
-import requests
+import httpx
 import yaml
 
-session = requests.Session()
+client = httpx.Client()
 
 
 def iterate_urls(node):
@@ -21,17 +21,17 @@ def iterate_urls(node):
                     yield version, url_, sha
 
 
-def test_url(url: str, timeout: int = 10) -> requests.Response | None:
+def test_url(url: str, timeout: int = 10) -> httpx.Response | None:
     try:
-        return session.head(url, timeout=timeout, allow_redirects=True)
-    except requests.exceptions.Timeout:
+        return client.head(url, timeout=timeout, follow_redirects=True)
+    except httpx.TimeoutException:
         logging.warning("timeout when contacting %s", url)
-    except requests.exceptions.ConnectionError as ex:
+    except httpx.ConnectError as ex:
         logging.warning("connection error when contacting %s: %s", url, ex)
     return None
 
 
-def _get_content_length(response: requests.Response) -> int | None:
+def _get_content_length(response: httpx.Response) -> int | None:
     content_length = response.headers.get("Content-Length")
     if content_length is None or not content_length.isdigit() or content_length == "0":
         return None
@@ -67,7 +67,7 @@ def check_alternative_archives(url: str, orig_size: int | None):
             size = orig_size
         else:
             response = test_url(new_url, timeout=10)
-            if not response or not response.ok:
+            if not response or response.status_code >= 400:
                 continue
             size = _get_content_length(response)
         results.append((size, new_url))
@@ -131,7 +131,7 @@ def main(path: str) -> int:
         response = test_url(url)
         if response is None:
             print(f"url {url} is not available\n")
-        elif not response.ok:
+        elif response.status_code >= 400:
             print(f"url {url} is not available ({response.status_code})\n")
         else:
             orig_size = _get_content_length(response)
