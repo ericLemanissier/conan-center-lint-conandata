@@ -67,7 +67,7 @@ def check_alternative_archives(url: str, orig_size: int | None):
             size = orig_size
         else:
             response = test_url(new_url, timeout=10)
-            if not response or response.status_code >= 400:
+            if not response or not response.is_success:
                 continue
             size = _get_content_length(response)
         results.append((size, new_url))
@@ -131,7 +131,7 @@ def main(path: str) -> int:
         response = test_url(url)
         if response is None:
             print(f"url {url} is not available\n")
-        elif response.status_code >= 400:
+        elif not response.is_success:
             print(f"url {url} is not available ({response.status_code})\n")
         else:
             orig_size = _get_content_length(response)
