@@ -38,7 +38,7 @@ def _get_content_length(response: httpx.Response) -> int | None:
     return int(content_length)
 
 
-def check_alternative_archives(url: str, orig_size: int | None):
+def check_alternative_archives(url: str, orig_size: int | None):  # noqa: MC0001
     parsed_url = urlparse(url)
     assert parsed_url.hostname is not None, f"Url {url=} does not have a hostname, {parsed_url=}"
     if parsed_url.hostname.endswith("github.com") and "/releases/download/" not in parsed_url.path:
@@ -85,6 +85,7 @@ def check_alternative_archives(url: str, orig_size: int | None):
             improvement = (orig_size - best_size) / orig_size
             if improvement >= 0.0005 and orig_size - best_size > 1024:
                 print(f"a {improvement:.1%} ({(orig_size - best_size)/1024:.0f}kB) smaller archive exists at {best_url}\n")
+
 
 def in_allow_list(version: str, url: str) -> bool:
     return {
@@ -150,7 +151,7 @@ def in_allow_list(version: str, url: str) -> bool:
     }.get(url, "") == version
 
 
-def main(path: str) -> int:
+def main(path: str) -> int:  # noqa: MC0001
     if path.endswith("conandata.yml"):
         path = path[0:-13]
     with open(os.path.join(path, "conandata.yml"), encoding="utf-8") as file:
@@ -181,7 +182,7 @@ def main(path: str) -> int:
         url_lower = url.lower()
         if not version_lower.startswith("cci."):
             if (
-                (version_lower in url_lower)
+                (version_lower in url_lower)   # noqa: too-many-boolean-expressions
                 or (version_lower.replace(".", "") in url_lower)
                 or (version_lower.replace(".", "_") in url_lower)
                 or (version_lower.replace("-", "") in url_lower)
