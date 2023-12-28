@@ -201,7 +201,7 @@ def main(path: str) -> int:  # noqa: MC0001
             orig_size = _get_content_length(response)
             check_alternative_archives(url, orig_size)
 
-    if at_least_one_version_in_url:
+    if at_least_one_version_in_url or len(conandata["sources"]) == 1:
         for vers in versions_not_in_url:
             print(f"url of {vers} does not contain version\n")
 
