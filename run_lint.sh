@@ -6,7 +6,7 @@ then
     res=$(python3 $(dirname "$0")/lint_conandata.py ${conandata})
     if [[ -n "$res" ]]
     then
-        echo "## [${d}](https://github.com/ericLemanissier/cocorepo/tree/master/recipes/${conandata})"
+        echo "## [${d}](https://github.com/ericLemanissier/cocorepo/tree/HEAD/recipes/${conandata})"
         echo "${res}"
         echo ""
     fi
