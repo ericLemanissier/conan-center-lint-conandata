@@ -50,7 +50,7 @@ jobs:
 
         working-directory: cocorepo/recipes
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: my-artifact
           path: pages
