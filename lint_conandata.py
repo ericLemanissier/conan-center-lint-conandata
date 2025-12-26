@@ -38,7 +38,7 @@ def _get_content_length(response: httpx.Response) -> int | None:
     return int(content_length)
 
 
-def check_alternative_archives(url: str, orig_size: int | None):  # noqa: MC0001
+def check_alternative_archives(url: str, orig_size: int | None):  # noqa: MC0001  pylint: disable=too-many-branches
     parsed_url = urlparse(url)
     hostname = parsed_url.hostname
     assert hostname is not None, f"Url {url=} does not have a hostname, {parsed_url=}"
@@ -87,7 +87,7 @@ def check_alternative_archives(url: str, orig_size: int | None):  # noqa: MC0001
             assert orig_size is not None and best_size is not None, f"orig_size or best_size is None for {url=}, {results=}, {archive_suffixes=}"
             improvement = (orig_size - best_size) / orig_size
             if improvement >= 0.0005 and orig_size - best_size > 1024:
-                print(f"a {improvement:.1%} ({(orig_size - best_size)/1024:.0f}kB) smaller archive exists at {best_url}\n")
+                print(f"a {improvement:.1%} ({(orig_size - best_size) / 1024:.0f}kB) smaller archive exists at {best_url}\n")
 
 
 def in_allow_list(version: str, url: str) -> bool:
@@ -154,7 +154,7 @@ def in_allow_list(version: str, url: str) -> bool:
     }.get(url, "") == version
 
 
-def main(path: str) -> int:  # noqa: MC0001
+def main(path: str) -> int:  # noqa: MC0001  pylint: disable=too-many-branches
     if path.endswith("conandata.yml"):
         path = path[0:-13]
     with open(os.path.join(path, "conandata.yml"), encoding="utf-8") as file:
