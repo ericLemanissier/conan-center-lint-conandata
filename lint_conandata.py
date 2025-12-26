@@ -41,12 +41,13 @@ def _get_content_length(response: httpx.Response) -> int | None:
 def check_alternative_archives(url: str, orig_size: int | None):  # noqa: MC0001
     parsed_url = urlparse(url)
     assert parsed_url.hostname is not None, f"Url {url=} does not have a hostname, {parsed_url=}"
-    if parsed_url.hostname.endswith("github.com") and "/releases/download/" not in parsed_url.path:
+    if (parsed_url.hostname == "github.com" or parsed_url.hostname.endswith(".github.com")) and "/releases/download/" not in parsed_url.path:
         # Ignore archives generated automatically from tags and hashes, as well as individual files.
         return
 
     # The suffixes are ranked by their typical compression efficiency
     archive_suffixes = [".tar.xz", ".tar.bz2", ".tar.gz", ".tgz", ".zip"]
+    without_suffix = None
     for suffix in archive_suffixes:
         if url.endswith(suffix):
             without_suffix = url[: -len(suffix)]
