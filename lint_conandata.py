@@ -1,3 +1,10 @@
+# /// script
+# dependencies = [
+#   "pyyaml==6.0.3",
+#   "httpx==0.28.1",
+# ]
+# ///
+
 import logging
 import os
 import sys
