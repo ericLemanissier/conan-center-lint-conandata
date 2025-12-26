@@ -30,12 +30,12 @@ jobs:
       - name: Checkout CCI
         uses: actions/checkout@v4
         with:
-          repository: conan-io/conan-center-index
-          path: conan-center-index
+          repository: ericLemanissier/cocorepo
+          path: cocorepo
 
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.14"
           cache: 'pip' # caching pip dependencies
       - run: |
           python3 -m pip install -r requirements.txt
@@ -48,7 +48,7 @@ jobs:
           echo "" | tee -a $outfile $GITHUB_STEP_SUMMARY
           parallel --keep-order ../../run_lint.sh ::: */*/ | tee -a $outfile $GITHUB_STEP_SUMMARY
 
-        working-directory: conan-center-index/recipes
+        working-directory: cocorepo/recipes
 
       - uses: actions/upload-artifact@v4
         with:
