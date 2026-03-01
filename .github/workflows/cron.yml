@@ -49,7 +49,7 @@ jobs:
 
         working-directory: cocorepo/recipes
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: my-artifact
           path: pages
@@ -60,7 +60,7 @@ jobs:
     needs: [status]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@v8
         with:
           name: my-artifact
 
