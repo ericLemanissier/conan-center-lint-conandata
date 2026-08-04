@@ -1,22 +1,19 @@
-# /// script
-# dependencies = [
-#   "pyyaml==6.0.3",
-#   "httpx==0.28.1",
-# ]
-# ///
-
 import logging
 import os
 import sys
+from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
 import httpx
 import yaml
 
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+
 client = httpx.Client()
 
 
-def iterate_urls(node):
+def iterate_urls(node: dict[str, dict[str, str]]) -> Iterator[tuple[str, str, str]]:
     for version, version_data in node.items():
         if "sha256" in version_data:
             url = version_data["url"]
@@ -45,7 +42,7 @@ def _get_content_length(response: httpx.Response) -> int | None:
     return int(content_length)
 
 
-def check_alternative_archives(url: str, orig_size: int | None):  # noqa: MC0001  pylint: disable=too-many-branches
+def check_alternative_archives(url: str, orig_size: int | None) -> None:
     parsed_url = urlparse(url)
     hostname = parsed_url.hostname
     assert hostname is not None, f"Url {url=} does not have a hostname, {parsed_url=}"
@@ -91,7 +88,8 @@ def check_alternative_archives(url: str, orig_size: int | None):  # noqa: MC0001
     else:
         best_size, best_url = min(results)
         if best_url != url:
-            assert orig_size is not None and best_size is not None, f"orig_size or best_size is None for {url=}, {results=}, {archive_suffixes=}"
+            assert orig_size is not None, f"orig_size is None for {url=}, {results=}, {archive_suffixes=}"
+            assert best_size is not None, f"best_size is None for {url=}, {results=}, {archive_suffixes=}"
             improvement = (orig_size - best_size) / orig_size
             if improvement >= 0.0005 and orig_size - best_size > 1024:
                 print(f"a {improvement:.1%} ({(orig_size - best_size) / 1024:.0f}kB) smaller archive exists at {best_url}\n")
@@ -161,7 +159,7 @@ def in_allow_list(version: str, url: str) -> bool:
     }.get(url, "") == version
 
 
-def main(path: str) -> int:  # noqa: MC0001  pylint: disable=too-many-branches
+def main(path: str) -> int:
     if path.endswith("conandata.yml"):
         path = path[0:-13]
     with open(os.path.join(path, "conandata.yml"), encoding="utf-8") as file:
@@ -192,7 +190,7 @@ def main(path: str) -> int:  # noqa: MC0001  pylint: disable=too-many-branches
         url_lower = url.lower()
         if not version_lower.startswith("cci."):
             if (
-                (version_lower in url_lower)   # noqa: too-many-boolean-expressions
+                (version_lower in url_lower)
                 or (version_lower.replace(".", "") in url_lower)
                 or (version_lower.replace(".", "_") in url_lower)
                 or (version_lower.replace("-", "") in url_lower)
